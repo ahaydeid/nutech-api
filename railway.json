@@ -1,0 +1,15 @@
+{
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "node server.js"
+  },
+  "services": [
+    {
+      "name": "nutech-api",
+      "port": 3000,
+      "protocol": "http"
+    }
+  ]
+}

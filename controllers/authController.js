@@ -1,12 +1,12 @@
-const db = require('../config/db');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+import { query } from '../config/db';
+import { hash, compare } from 'bcryptjs';
+import { sign } from 'jsonwebtoken';
 
-exports.register = async (req, res) => {
+export async function register(req, res) {
   const { name, email, password } = req.body;
-  const hashed = await bcrypt.hash(password, 10);
+  const hashed = await hash(password, 10);
   try {
-    await db.query(
+    await query(
       'INSERT INTO users (name, email, password) VALUES ($1, $2, $3)',
       [name, email, hashed]
     );
@@ -14,21 +14,21 @@ exports.register = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.detail || 'Error registering user' });
   }
-};
+}
 
-exports.login = async (req, res) => {
+export async function login(req, res) {
   const { email, password } = req.body;
   try {
-    const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    const result = await query('SELECT * FROM users WHERE email = $1', [email]);
     const user = result.rows[0];
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const match = await bcrypt.compare(password, user.password);
+    const match = await compare(password, user.password);
     if (!match) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.json({ token });
   } catch (err) {
     res.status(500).json({ message: 'Login error' });
   }
-};
+}

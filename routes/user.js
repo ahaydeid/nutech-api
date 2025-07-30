@@ -1,10 +1,10 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const auth = require('../middleware/auth');
-const { getBalance, topUp, getTransactions } = require('../controllers/userController');
+const auth = require("../middleware/auth").default;
+const { getBalance, topUp, getTransactions } = require("../controllers/userController");
 
-router.get('/balance', auth, getBalance);
-router.post('/topup', auth, topUp);
-router.get('/transaction/history', auth, getTransactions);
+router.get("/balance", auth, getBalance);
+router.post("/topup", auth, topUp);
+router.get("/transaction/history", auth, getTransactions);
 
 module.exports = router;

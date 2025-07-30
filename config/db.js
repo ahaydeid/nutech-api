@@ -1,4 +1,3 @@
-// config/db.js
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
 

@@ -18,7 +18,7 @@ export async function register(req, res) {
   }
 
   // Validasi panjang password
-  if (password.length < 8) {
+  if (!password || password.length < 8) {
     return res.status(400).json({
       status: 1,
       message: "Password minimal 8 karakter",
@@ -27,11 +27,14 @@ export async function register(req, res) {
   }
 
   const hashed = await hash(password, 10);
+  const defaultProfileImage = "https://yoururlapi.com/profile.jpeg";
+  const defaultBalance = 1000000;
+
   try {
     await db.query(
-      `INSERT INTO users (email, first_name, last_name, password)
-       VALUES ($1, $2, $3, $4)`,
-      [email, first_name, last_name, hashed]
+      `INSERT INTO users (email, first_name, last_name, password, profile_image, balance)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [email, first_name, last_name, hashed, defaultProfileImage, defaultBalance]
     );
 
     return res.status(200).json({
@@ -48,6 +51,7 @@ export async function register(req, res) {
     });
   }
 }
+
 
 export async function login(req, res) {
   const { email, password } = req.body;
@@ -74,14 +78,6 @@ export async function login(req, res) {
   try {
     const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
     const user = result.rows[0];
-
-    // if (!user) {
-    //   return res.status(401).json({
-    //     status: 103,
-    //     message: "Username atau password salah",
-    //     data: null
-    //   });
-    // }
 
     const match = await compare(password, user.password);
     if (!match) {

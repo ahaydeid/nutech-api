@@ -4,10 +4,11 @@ import jwt from "jsonwebtoken";
 
 const { sign } = jwt;
 
+import jwt from "jsonwebtoken";
+
 export async function register(req, res) {
   const { email, first_name, last_name, password } = req.body;
 
-  // Validasi format email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return res.status(400).json({
@@ -17,7 +18,6 @@ export async function register(req, res) {
     });
   }
 
-  // Validasi panjang password
   if (!password || password.length < 8) {
     return res.status(400).json({
       status: 1,
@@ -31,16 +31,22 @@ export async function register(req, res) {
   const defaultBalance = 1000000;
 
   try {
-    await db.query(
+    const result = await db.query(
       `INSERT INTO users (email, first_name, last_name, password, profile_image, balance)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
       [email, first_name, last_name, hashed, defaultProfileImage, defaultBalance]
     );
 
-    return res.status(200).json({
+    const userId = result.rows[0].id;
+
+    const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+      expiresIn: "1d"
+    });
+
+    return res.status(201).json({
       status: 0,
-      message: "Registrasi berhasil silahkan login",
-      data: null
+      message: "Registrasi berhasil",
+      data: { token }
     });
   } catch (err) {
     console.error("Register error:", err);

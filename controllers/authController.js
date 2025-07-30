@@ -1,34 +1,115 @@
-import { query } from '../config/db';
-import { hash, compare } from 'bcryptjs';
-import { sign } from 'jsonwebtoken';
+import db from '../config/db.js';
+import { hash, compare } from "bcryptjs";
+import jwt from "jsonwebtoken";
+
+const { sign } = jwt;
 
 export async function register(req, res) {
-  const { name, email, password } = req.body;
+  const { email, first_name, last_name, password } = req.body;
+
+  // Validasi format email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({
+      status: 102,
+      message: "Paramter email tidak sesuai format",
+      data: null
+    });
+  }
+
+  // Validasi panjang password
+  if (password.length < 8) {
+    return res.status(400).json({
+      status: 1,
+      message: "Password minimal 8 karakter",
+      data: null
+    });
+  }
+
   const hashed = await hash(password, 10);
   try {
-    await query(
-      'INSERT INTO users (name, email, password) VALUES ($1, $2, $3)',
-      [name, email, hashed]
+    await db.query(
+      `INSERT INTO users (email, first_name, last_name, password)
+       VALUES ($1, $2, $3, $4)`,
+      [email, first_name, last_name, hashed]
     );
-    res.json({ message: 'User registered' });
+
+    return res.status(200).json({
+      status: 0,
+      message: "Registrasi berhasil silahkan login",
+      data: null
+    });
   } catch (err) {
-    res.status(500).json({ message: err.detail || 'Error registering user' });
+    console.error("Register error:", err);
+    return res.status(500).json({
+      status: 1,
+      message: err.detail || "Terjadi kesalahan saat registrasi",
+      data: null
+    });
   }
 }
 
 export async function login(req, res) {
   const { email, password } = req.body;
+
+  // Validasi Format Email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({
+      status: 102,
+      message: "Paramter email tidak sesuai format",
+      data: null
+    });
+  }
+
+  // Validasi panjang password
+  if (password.length < 8) {
+    return res.status(400).json({
+      status: 102,
+      message: "Password minimal 8 karakter",
+      data: null
+    });
+  }
+
   try {
-    const result = await query('SELECT * FROM users WHERE email = $1', [email]);
+    const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
     const user = result.rows[0];
-    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+
+    // if (!user) {
+    //   return res.status(401).json({
+    //     status: 103,
+    //     message: "Username atau password salah",
+    //     data: null
+    //   });
+    // }
 
     const match = await compare(password, user.password);
-    if (!match) return res.status(400).json({ message: 'Invalid credentials' });
+    if (!match) {
+      return res.status(401).json({
+        status: 1,
+        message: "Username atau password salah",
+        data: null
+      });
+    }
 
-    const token = sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.json({ token });
+    const token = sign(
+      { email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "12h" }
+    );
+
+    return res.status(200).json({
+      status: 0,
+      message: "Login Sukses",
+      data: { token }
+    });
+
   } catch (err) {
-    res.status(500).json({ message: 'Login error' });
+    console.error("Login error:", err);
+    return res.status(500).json({
+      status: 1,
+      message: "Terjadi kesalahan saat login",
+      data: null
+    });
   }
 }

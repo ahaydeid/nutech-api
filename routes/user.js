@@ -1,24 +1,10 @@
-// const express = require("express");
-// const router = express.Router();
-// const auth = require("../middleware/auth").default;
-// const { getBalance, topUp, getTransactions } = require("../controllers/userController");
-
-// router.get("/balance", auth, getBalance);
-// router.post("/topup", auth, topUp);
-// router.get("/transaction/history", auth, getTransactions);
-
-// module.exports = router;
-
-
-// routes/user.js
-import express from 'express';
-import { getBalance, topUp, getTransactionHistory } from '../controllers/userController.js';
-import auth from '../middleware/auth.js';
+import express from "express";
+import { verifyToken } from "../middleware/auth.js";
+import { getBalance, topUp, getTransactions, getProfile, updateProfile } from "../controllers/userController.js";
 
 const router = express.Router();
 
-router.get('/balance', auth, getBalance);
-router.post('/topup', auth, topUp);
-router.get('/transaction/history', auth, getTransactionHistory);
+router.get("/profile", verifyToken, getProfile);
+router.put("/profile/update", verifyToken, updateProfile);
 
 export default router;

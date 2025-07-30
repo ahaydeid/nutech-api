@@ -1,9 +1,34 @@
-# Ignore dependencies
+# Dependency folder
 node_modules/
 
-# Ignore environment config
+# Environment variable
 .env
+.env.*.local
 
-# Ignore logs
+# Logs
 npm-debug.log*
 yarn-debug.log*
+pnpm-debug.log*
+
+# Runtime
+*.pid
+*.seed
+*.log
+
+# Build output
+dist/
+build/
+coverage/
+
+# Editor settings
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Certificates (jangan simpan private key!)
+*.pem
+*.key
+*.crt
